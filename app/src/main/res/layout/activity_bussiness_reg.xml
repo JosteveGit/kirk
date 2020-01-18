@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".biz.bussiness_regActivity"
+    android:orientation="vertical">
+
+
+    <ImageView
+        android:layout_width="48dp"
+        android:layout_height="65dp"
+        android:layout_marginRight="200dp"
+        android:src="@drawable/ic_closedown"
+        android:id="@+id/cds"/>
+
+
+    <de.hdodenhof.circleimageview.CircleImageView
+        android:id="@+id/bizimg"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_gravity="center"
+        android:layout_marginTop="-20dp"
+        android:src="@drawable/gol" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Create Account"
+        android:layout_gravity="left"
+        android:id="@+id/create"
+        android:textColor="@color/colorPrimary"
+        android:textSize="25sp"/>
+
+    <TextView
+        android:id="@+id/BIZ"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:padding="10dp"
+        android:text="ENTERTAINMENT BUSSINESS ACCOUNT"
+        android:textColor="#E53935"
+        android:textSize="10sp" />
+
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="10dp"
+            android:orientation="vertical" >
+
+
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/bizname"
+            android:hint="Bussiness Name"
+            android:layout_marginTop="15dp"
+            android:padding="10dp"
+            android:inputType="text"/>
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/bizemail"
+            android:hint="Email"
+            android:layout_marginTop="15dp"
+            android:padding="10dp"
+            android:inputType="text"/>
+
+
+            <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/bizpassword"
+            android:hint="Password"
+            android:layout_marginTop="15dp"
+            android:padding="10dp"
+                android:inputType="textPassword"/>
+        <AutoCompleteTextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/biztype"
+            android:hint="Bussiness Type"
+            android:layout_marginTop="15dp"
+            android:padding="10dp"
+            android:drawableRight="@drawable/ic_pointdown"/>
+
+        <AutoCompleteTextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/region"
+            android:hint="Region"
+            android:layout_marginTop="15dp"
+            android:padding="10dp"
+            android:drawableRight="@drawable/ic_pointdown"/>
+
+            <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/address"
+            android:hint="Address"
+            android:layout_marginTop="15dp"
+            android:padding="10dp"/>
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/phone"
+            android:hint="Phone Number"
+            android:layout_marginTop="15dp"
+            android:padding="10dp"
+            android:inputType="phone"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="7dp"
+                android:text="Already have an Account ?"
+                android:textAlignment="center"
+                android:textColor="@android:color/black"
+                android:textStyle="bold"
+                android:id="@+id/ahva"/>
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="15dp"
+            android:text="Register"
+            android:id="@+id/bizreg"
+            android:textColor="@color/colorPrimary"
+            android:background="@drawable/button_background"/>
+        </LinearLayout>
+    </ScrollView>
+
+
+
+</LinearLayout>
