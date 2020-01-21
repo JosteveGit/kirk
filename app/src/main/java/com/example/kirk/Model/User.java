@@ -1,6 +1,8 @@
 package com.example.kirk.Model;
 
-public class User {
+import com.example.kirk.OneClass;
+
+public class User extends OneClass {
     private String id;
     private String username;
     private String fullname;
@@ -167,4 +169,5 @@ public class User {
     public void setBizimageurl(String bizimageurl) {
         this.bizimageurl = bizimageurl;
     }
+
 }

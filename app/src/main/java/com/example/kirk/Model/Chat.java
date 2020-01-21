@@ -6,6 +6,7 @@ public class Chat {
     private String receiver;
     private String message;
     private boolean isseen;
+    private int count;
 
     public Chat(String sender, String receiver, String message, boolean isseen) {
         this.sender = sender;
@@ -49,4 +50,11 @@ public class Chat {
         this.isseen = isseen;
     }
 
+    public int getCount() {
+        return count;
+    }
+
+    public void setCount(int count) {
+        this.count = count;
+    }
 }

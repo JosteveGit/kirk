@@ -1,14 +1,16 @@
 package com.example.kirk.Fragment;
 
-import android.content.Context;
-import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.LifecycleOwner;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,6 +18,7 @@ import android.widget.EditText;
 
 import com.example.kirk.Adapter.ChatUserAdapter;
 import com.example.kirk.Model.User;
+import com.example.kirk.OneViewModel;
 import com.example.kirk.R;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -35,6 +38,9 @@ public class GuserFragment extends Fragment {
     private ChatUserAdapter chatuserAdapter;
     private List<User> mUsers;
 
+    private OneViewModel oneViewModel;
+
+
     EditText search_users;
 
     @Override
@@ -46,8 +52,9 @@ public class GuserFragment extends Fragment {
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        mUsers = new ArrayList<>();
+        oneViewModel = ViewModelProviders.of(this).get(OneViewModel.class);
 
+        mUsers = new ArrayList<>();
         readUsers();
 
 
@@ -59,7 +66,7 @@ public class GuserFragment extends Fragment {
         final FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
         DatabaseReference reference = FirebaseDatabase.getInstance().getReference("Users");
 
-        reference.addValueEventListener(new ValueEventListener() {
+        reference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 mUsers.clear();
@@ -68,11 +75,19 @@ public class GuserFragment extends Fragment {
 
                     if (!user.getId().equals(firebaseUser.getUid())) {
                         mUsers.add(user);
+                        oneViewModel.set_users(mUsers);
+
                     }
                 }
 
-                chatuserAdapter = new ChatUserAdapter(getContext(), mUsers, false);
-                recyclerView.setAdapter(chatuserAdapter);
+                oneViewModel.get_users().observe((LifecycleOwner) getContext(), new Observer<List<User>>() {
+                    @Override
+                    public void onChanged(List<User> users) {
+                        chatuserAdapter = new ChatUserAdapter(getContext(), null, false, mUsers);
+                        Log.d("SeAdapter", "YES");
+                        recyclerView.setAdapter(chatuserAdapter);
+                    }
+                });
             }
 
             @Override

@@ -7,9 +7,13 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
+import androidx.fragment.app.FragmentStatePagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -18,6 +22,7 @@ import android.widget.TextView;
 import com.bumptech.glide.Glide;
 import com.example.kirk.Fragment.GchatFragment;
 import com.example.kirk.Fragment.GuserFragment;
+import com.example.kirk.Model.Chat;
 import com.example.kirk.Model.User;
 import com.google.android.material.tabs.TabLayout;
 import com.google.firebase.auth.FirebaseAuth;
@@ -30,6 +35,7 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -71,6 +77,8 @@ public class Main2Activity extends AppCompatActivity  {
                 if (user.getImageurl().equals("default")){
                     profile_image.setImageResource(R.mipmap.ic_launcher);
                 } else {
+
+                    //change this
                     Glide.with(getApplicationContext()).load(user.getImageurl()).into(profile_image);
                 }
             }
@@ -81,23 +89,51 @@ public class Main2Activity extends AppCompatActivity  {
             }
         });
 
-        TabLayout tabLayout = findViewById(R.id.tab_layout);
-         ViewPager viewPager = findViewById(R.id.view_pager);
-
-        ViewPagerAdapter viewPagerAdapter = new ViewPagerAdapter(getSupportFragmentManager());
-
-        viewPagerAdapter.addFragment(new GchatFragment(), "Chats");
-        viewPagerAdapter.addFragment(new GuserFragment(), "Users");
+        final TabLayout tabLayout = findViewById(R.id.tab_layout);
+        final ViewPager viewPager = findViewById(R.id.view_pager);
 
 
-        viewPager.setAdapter(viewPagerAdapter);
+        reference = FirebaseDatabase.getInstance().getReference("Chats");
+        reference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                ViewPagerAdapter viewPagerAdapter = new ViewPagerAdapter(getSupportFragmentManager());
+                int unread = 0;
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()){
+                    Chat chat = snapshot.getValue(Chat.class);
+                    if (chat.getReceiver().equals(firebaseUser.getUid()) && !chat.isIsseen()){
+                        unread++;
+                    }
+                }
 
-        tabLayout.setupWithViewPager(viewPager);
+//                if (unread == 0){
+//                } else {
+//                    viewPagerAdapter.addFragment(new GchatFragment(), "("+unread+") Chats");
+//                }
+
+                viewPagerAdapter.addFragment(new GchatFragment(Main2Activity.this), "Chats");
+
+                viewPagerAdapter.addFragment(new GuserFragment(), "Users");
+
+                viewPager.setAdapter(viewPagerAdapter);
+
+                tabLayout.setupWithViewPager(viewPager);
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+
 
     }
 
 
-    class ViewPagerAdapter extends FragmentPagerAdapter {
+
+
+    class ViewPagerAdapter extends FragmentStatePagerAdapter{
 
         private ArrayList<Fragment> fragments;
         private ArrayList<String> titles;
@@ -108,6 +144,7 @@ public class Main2Activity extends AppCompatActivity  {
             this.titles = new ArrayList<>();
         }
 
+        @NonNull
         @Override
         public Fragment getItem(int position) {
             return fragments.get(position);
@@ -132,5 +169,24 @@ public class Main2Activity extends AppCompatActivity  {
         }
     }
 
+    private void status(String status){
+        reference = FirebaseDatabase.getInstance().getReference("Users").child(firebaseUser.getUid());
 
+        HashMap<String, Object> hashMap = new HashMap<>();
+        hashMap.put("status", status);
+
+        reference.updateChildren(hashMap);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        status("online");
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        status("offline");
+    }
 }

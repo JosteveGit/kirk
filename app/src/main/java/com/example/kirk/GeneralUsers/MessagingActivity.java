@@ -18,7 +18,10 @@ import com.bumptech.glide.Glide;
 import com.example.kirk.Adapter.MessageAdapter;
 import com.example.kirk.Model.Chat;
 import com.example.kirk.Model.User;
+import com.example.kirk.Notification.Data;
 import com.example.kirk.R;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -30,12 +33,15 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
 public class MessagingActivity extends AppCompatActivity {
     CircleImageView profile_image;
     TextView username;
+
+    boolean hasSentMessage = false;
 
 
     FirebaseUser fuser;
@@ -52,6 +58,12 @@ public class MessagingActivity extends AppCompatActivity {
     Intent intent;
 
     @Override
+    public void onBackPressed() {
+      finish();
+        super.onBackPressed();
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_messaging);
@@ -60,12 +72,15 @@ public class MessagingActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle("");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        intent = getIntent();
+        final String userid = intent.getStringExtra("userid");
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                finish();
+             finish();
             }
         });
+
 
         recyclerView =findViewById(R.id.recycler_view);
         recyclerView.setHasFixedSize(true);
@@ -78,8 +93,7 @@ public class MessagingActivity extends AppCompatActivity {
         btn_send = findViewById(R.id.btn_send);
         text_send = findViewById(R.id.text_send);
 
-        intent = getIntent();
-        final String userid = intent.getStringExtra("userid");
+
 
         btn_send.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -106,7 +120,9 @@ public class MessagingActivity extends AppCompatActivity {
                 if (user.getImageurl().equals("default")){
                     profile_image.setImageResource(R.mipmap.ic_launcher);
                 }else{
-                    Glide.with(MessagingActivity.this).load(user.getImageurl()).into(profile_image);
+                    try{
+                        Glide.with(MessagingActivity.this).load(user.getImageurl()).into(profile_image);
+                    }catch (Exception e){}
                 }
                 readMessages(fuser.getUid(), userid, user.getImageurl());
             }
@@ -118,17 +134,34 @@ public class MessagingActivity extends AppCompatActivity {
         });
     }
 
-    private void sendMessage(String sender, String receiver, String message){
+    private void sendMessage(final String sender, final String receiver, final String message){
 
-        DatabaseReference reference = FirebaseDatabase.getInstance().getReference();
+        final DatabaseReference reference = FirebaseDatabase.getInstance().getReference();
 
-        HashMap<String, Object> hashMap = new HashMap<>();
-        hashMap.put("sender", sender);
-        hashMap.put("receiver", receiver);
-        hashMap.put("message", message);
+        FirebaseDatabase.getInstance().getReference().child("Chats").addListenerForSingleValueEvent(
+                new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        HashMap<String, Object> hashMap = new HashMap<>();
+                        hashMap.put("sender", sender);
+                        hashMap.put("receiver", receiver);
+                        hashMap.put("message", message);
+                        hashMap.put("count",(int) (dataSnapshot.getChildrenCount()+1));
+                        reference.child("Chats").push().setValue(hashMap).addOnCompleteListener(new OnCompleteListener<Void>() {
+                            @Override
+                            public void onComplete(@NonNull Task<Void> task) {
+                                hasSentMessage = true;
+                            }
+                        });
 
+                    }
 
-        reference.child("Chats").push().setValue(hashMap);
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                    }
+                }
+        );
     }
 
     private void readMessages(final String myid, final String userid, final String imageurl){

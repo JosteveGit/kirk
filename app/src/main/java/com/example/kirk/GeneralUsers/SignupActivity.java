@@ -389,8 +389,11 @@ public class SignupActivity extends AppCompatActivity {
                                 ).show();
                                 saveCardAndNextPaymentDate();
                                 proceedToApp();
+                            }else {
+                                initializeRave();
                             }
                         } catch (JSONException e) {
+                            initializeRave();
                             e.printStackTrace();
                         }
                     }
@@ -506,6 +509,7 @@ public class SignupActivity extends AppCompatActivity {
                             map.put("bio", "");
                             map.put("location", region2);
                             map.put("search", username.toLowerCase());
+                            map.put("recent_chat", "" );
 
                             reference.setValue(map).addOnCompleteListener(new OnCompleteListener<Void>() {
                                 @Override
