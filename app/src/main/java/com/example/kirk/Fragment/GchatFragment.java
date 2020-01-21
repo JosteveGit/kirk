@@ -6,16 +6,11 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.LifecycleOwner;
-import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Observer;
-import androidx.lifecycle.ViewModel;
-import androidx.lifecycle.ViewModelProvider;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -36,9 +31,8 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 
@@ -162,13 +156,14 @@ public class GchatFragment extends Fragment {
 
                 for (DataSnapshot dataSnapshot1 : dataSnapshot.getChildren()) {
                     Chat chat = dataSnapshot1.getValue(Chat.class);
-                    if (Objects.requireNonNull(chat).getSender().equals(theIdToSearchFor)) {
+                    if (Objects.requireNonNull(chat).getSender().equals(theIdToSearchFor) || chat.getReceiver().equals(theIdToSearchFor)) {
                         chats.add(chat);
                     }
                 }
 
-                for (final Chat chat1 : removeRedundancies(chats)) {
-                    FirebaseDatabase.getInstance().getReference("Users").child(chat1.getReceiver()).addValueEventListener(
+                for (final Chat chat1 : newRemoveRedundancies(chats)) {
+
+                    FirebaseDatabase.getInstance().getReference("Users").child(chat1.getReceiver().equals(theIdToSearchFor) ? chat1.getSender() : chat1.getReceiver()).addValueEventListener(
                             new ValueEventListener() {
                                 @Override
                                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -184,15 +179,6 @@ public class GchatFragment extends Fragment {
                             }
                     );
                 }
-
-                oneViewModel.get_messages().observe((LifecycleOwner) context, new Observer<List<Message>>() {
-                    @Override
-                    public void onChanged(List<Message> messages) {
-                        chatUserAdapter = new ChatUserAdapter(getContext(), mUsers, true, null);
-                        Log.d("SettingAdapter", "YES");
-                        recyclerView.setAdapter(chatUserAdapter);
-                    }
-                });
             }
 
             @Override
@@ -200,52 +186,53 @@ public class GchatFragment extends Fragment {
 
             }
         });
+
+        oneViewModel.get_messages().observe((LifecycleOwner) context, new Observer<List<Message>>() {
+            @Override
+            public void onChanged(List<Message> messages) {
+                chatUserAdapter = new ChatUserAdapter(getContext(), mUsers, true, null);
+                Log.d("SettingAdapter", "YES");
+                recyclerView.setAdapter(chatUserAdapter);
+            }
+        });
     }
 
     private List<Chat> arrangeChat(List<Chat> chats) {
-        Chat[] chats1 = new Chat[chats.size()];
-        for(int i=0;i< chats.size();i++){
-            chats1[i] = chats.get(i);
-        }
-        for (int i = 0; i < chats.size(); i++) {
-            for (int j = i + 1; j < chats.size(); j++) {
-                if (chats1[i].getCount() < chats1[j].getCount()) {
-                    Chat temp = chats1[i];
-                    chats1[i] = chats1[j];
-                    chats1[j] = temp;
-                }
+        Collections.sort(chats, new Comparator<Chat>() {
+            @Override
+            public int compare(Chat o1, Chat o2) {
+                return Integer.compare(o2.getCount(), o1.getCount());
             }
-        }
-        List<Chat> result = new ArrayList<>();
-        Collections.addAll(result, chats1);
-        Log.d("ArrangeValue", result.size()+"");
-
-        return result;
+        });
+        return chats;
     }
 
-    private List<Chat> removeRedundancies(List<Chat> result) {
-        Map<String, Integer> receivers = new HashMap<>();
+    private List<Chat> newRemoveRedundancies(List<Chat> result) {
+        List<Chat> temporal = new ArrayList<>();
         for (Chat chat : result) {
-            if (receivers.containsKey(chat.getReceiver())) {
-                Log.d("ReceiverContainsKey", "Yes");
-                if (receivers.get(chat.getReceiver()) < chat.getCount()) {
-                    receivers.remove(chat.getReceiver());
-                    receivers.put(chat.getReceiver(), chat.getCount());
-                }
+            if (temporal.isEmpty()) {
+                temporal.add(chat);
             } else {
-                receivers.put(chat.getReceiver(), chat.getCount());
+                boolean foundMatch = false;
+                for (Chat chat1 : temporal) {
+                    if ((chat.getSender().equals(chat1.getSender()) && chat.getReceiver().equals(chat1.getReceiver())) || (chat.getSender().equals(chat1.getReceiver()) && chat.getReceiver().equals(chat1.getSender()))) {
+                        if (chat1.getCount() < chat.getCount()) {
+                            //swap
+                            chat1.setMessage(chat.getMessage());
+                            chat1.setReceiver(chat.getReceiver());
+                            chat1.setSender(chat.getSender());
+                            chat1.setCount(chat.getCount());
+                            foundMatch = true;
+                            break;
+                        }
+                    }
+                }
+                if (!foundMatch) {
+                    temporal.add(chat);
+                }
             }
         }
-        Log.d("ReceiversValue", receivers.size()+"");
-        List<Chat> chats = new ArrayList<>();
-        for (Chat chat : result) {
-            if (receivers.get(chat.getReceiver()) == chat.getCount()) {
-                chats.add(chat);
-            }
-        }
-        Log.d("ReceiversValue", chats.size()+"");
-
-        return arrangeChat(chats);
+        return arrangeChat(temporal);
     }
 
 
